@@ -1,243 +1,171 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flores para você 🌻</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #FAF3E0; /* Fundo creme do vídeo */
-            font-family: 'Courier New', Courier, monospace;
-            overflow: hidden;
-            height: 100vh;
-            color: #4A3B32;
-        }
+(function () {
+    var canvas = $('#canvas');
 
-        /* Texto no topo esquerdo (como no vídeo) */
-        .text-container {
-            position: absolute;
-            top: 8%;
-            left: 5%;
-            z-index: 10;
-            width: 90%;
-            max-width: 450px;
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-        @media (min-width: 768px) {
-            .text-container { font-size: 1.4rem; top: 12%; left: 8%; }
-        }
+    if (!canvas[0].getContext) {
+        $("#error").show();
+        return false;
+    }
 
-        .typewriter {
-            min-height: 24px;
-            margin-bottom: 12px;
-        }
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 1.2em;
-            background-color: #4A3B32;
-            animation: blink 1s step-end infinite;
-            vertical-align: bottom;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
+    var width = canvas.width();
+    var height = canvas.height();
 
-        /* Canvas da árvore centralizado */
-        #canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-            pointer-events: none;
+    canvas.attr("width", width);
+    canvas.attr("height", height);
+
+    var opts = {
+        seed: {
+            x: width / 2 - 20,
+            color: "rgb(190, 26, 37)",
+            scale: 4
+        },
+        branch: [
+            [535, 680, 570, 250, 500, 200, 30, 100, [
+                [540, 500, 455, 417, 340, 400, 13, 100, [
+                    [450, 435, 434, 430, 394, 395, 2, 40]
+                ]],
+                [550, 445, 600, 356, 680, 345, 12, 100, [
+                    [578, 400, 648, 409, 661, 426, 3, 80]
+                ]],
+                [539, 281, 537, 248, 534, 217, 3, 40],
+                [546, 397, 413, 247, 328, 244, 9, 80, [
+                    [427, 286, 383, 253, 371, 205, 2, 40],
+                    [498, 345, 435, 315, 395, 330, 4, 60]
+                ]],
+                [546, 357, 608, 252, 678, 221, 6, 100, [
+                    [590, 293, 646, 277, 648, 271, 2, 80]
+                ]]
+            ]]
+        ],
+        bloom: {
+            num: 700,
+            width: 1080,
+            height: 650,
+        },
+        footer: {
+            width: 1200,
+            height: 5,
+            speed: 10,
         }
+    }
 
-        /* Linha do chão e Cronômetro (Exatamente como no vídeo) */
-        .bottom-section {
-            position: absolute;
-            bottom: 5%;
-            left: 0;
-            width: 100%;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+    var tree = new Tree(canvas[0], width, height, opts);
+    var seed = tree.seed;
+    var foot = tree.footer;
+    var hold = 1;
+
+    canvas.click(function (e) {
+        var offset = canvas.offset(), x, y;
+        x = e.pageX - offset.left;
+        y = e.pageY - offset.top;
+        if (seed.hover(x, y)) {
+            hold = 0;
+            canvas.unbind("click");
+            canvas.unbind("mousemove");
+            canvas.removeClass('hand');
         }
+    }).mousemove(function (e) {
+        var offset = canvas.offset(), x, y;
+        x = e.pageX - offset.left;
+        y = e.pageY - offset.top;
+        canvas.toggleClass('hand', seed.hover(x, y));
+    });
 
-        .ground-line {
-            width: 90%;
-            height: 3px;
-            background-color: #4A3B32;
-            margin-bottom: 15px;
-        }
-
-        .timer-container {
-            text-align: center;
-            font-size: 0.95rem;
-            background: rgba(250, 243, 224, 0.8);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-        .timer-container strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-        #timer {
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="text-container" id="text-container"></div>
-    
-    <canvas id="canvas"></canvas>
-
-    <div class="bottom-section">
-        <div class="ground-line" id="ground"></div>
-        <div class="timer-container">
-            <strong>Meu amor por você começou há...</strong>
-            <p id="timer">0 dias 0 horas 0 minutos 0 segundos</p>
-        </div>
-    </div>
-
-<script>
-    // --- 1. TEXTOS E DATA ---
-    const phrases = [
-        "Flores Amarelas para o amor da minha vida:",
-        "Se eu pudesse escolher um lugar seguro, seria ao seu lado.",
-        "Quanto mais tempo passa, vejo que meu amor por você só cresce.",
-        "- Eu te amo! 🌻"
-    ];
-    
-    // Data: 31 de Agosto de 2025
-    const startDate = new Date(2025, 7, 31, 0, 0, 0); 
-
-    // --- 2. MÁQUINA DE ESCREVER ---
-    const textContainer = document.getElementById('text-container');
-    let phraseIndex = 0;
-    let charIndex = 0;
-    
-    function typeWriter() {
-        if (phraseIndex < phrases.length) {
-            if (charIndex === 0) {
-                const p = document.createElement('div');
-                p.className = 'typewriter';
-                p.id = `phrase-${phraseIndex}`;
-                textContainer.appendChild(p);
+    // Evento de tecla para iniciar com Enter
+    $(document).keydown(function(e) {
+        if (e.keyCode == 13) {
+            if (hold) {
+                hold = 0;
+                canvas.unbind("click");
+                canvas.unbind("mousemove");
+                canvas.removeClass('hand');
             }
-            const currentElement = document.getElementById(`phrase-${phraseIndex}`);
-            if (charIndex < phrases[phraseIndex].length) {
-                currentElement.innerHTML = phrases[phraseIndex].substring(0, charIndex + 1) + '<span class="cursor"></span>';
-                charIndex++;
-                setTimeout(typeWriter, 50); 
-            } else {
-                currentElement.innerHTML = phrases[phraseIndex];
-                phraseIndex++;
-                charIndex = 0;
-                setTimeout(typeWriter, 1200); 
-            }
-        } else {
-            const p = document.getElementById(`phrase-${phraseIndex - 1}`);
-            if(p) p.innerHTML += '<span class="cursor"></span>';
         }
-    }
-    setTimeout(typeWriter, 800);
+    });
 
-    // --- 3. CONTADOR DE TEMPO ---
-    function updateTimer() {
-        const now = new Date();
-        const diff = now - startDate;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / 1000 / 60) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        document.getElementById('timer').innerText = `${days} dias ${hours} horas ${minutes} minutos ${seconds} segundos`;
-    }
-    setInterval(updateTimer, 1000);
-    updateTimer();
-
-    // --- 4. ÁRVORE FRACTAL (CÓPIA EXATA DO VÍDEO) ---
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-
-    // Desenha as flores apenas nas pontas
-    function drawFlower(x, y) {
-        // Pétalas amarelas
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFD700'; 
-        ctx.fill();
-
-        for (let i = 0; i < 5; i++) {
-            const angle = (i * Math.PI * 2) / 5;
-            ctx.beginPath();
-            ctx.arc(x + Math.cos(angle) * 5, y + Math.sin(angle) * 5, 4, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFE600';
-            ctx.fill();
+    // Animações traduzidas logicamente
+    var seedAnimate = eval(Jscex.compile("async", function () {
+        seed.draw();
+        while (hold) {
+            $await(Jscex.Async.sleep(10));
         }
-
-        // Miolo marrom
-        ctx.beginPath();
-        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#8B4513'; 
-        ctx.fill();
-    }
-
-    // Lógica Matemática da Árvore Clássica
-    function drawTree(startX, startY, len, angle, branchWidth, depth) {
-        // Calcula o destino do galho
-        const endX = startX + len * Math.sin(angle * Math.PI / 180);
-        const endY = startY - len * Math.cos(angle * Math.PI / 180);
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#4A3B32';
-        ctx.lineWidth = branchWidth;
-        ctx.lineCap = 'round';
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
-
-        // A árvore do vídeo se divide exatamente 7 vezes
-        if (depth < 7) {
-            setTimeout(() => {
-                // Galho da esquerda e galho da direita (simetria perfeita)
-                drawTree(endX, endY, len * 0.75, angle - 25, branchWidth * 0.7, depth + 1);
-                drawTree(endX, endY, len * 0.75, angle + 25, branchWidth * 0.7, depth + 1);
-            }, 80); // Velocidade de crescimento
-        } else {
-            // Quando a árvore termina de crescer, a flor nasce
-            setTimeout(() => {
-                drawFlower(endX, endY);
-            }, 100);
+        while (seed.canScale()) {
+            seed.scale(0.95);
+            $await(Jscex.Async.sleep(10));
         }
-    }
+        while (seed.canMove()) {
+            seed.move(0, 2);
+            foot.draw();
+            $await(Jscex.Async.sleep(10));
+        }
+    }));
 
-    // Inicia a animação
-    window.onload = () => {
-        setTimeout(() => {
-            // Posiciona a árvore exatamente no meio, nascendo da linha
-            const groundElement = document.getElementById('ground');
-            const groundRect = groundElement.getBoundingClientRect();
-            
-            const startX = canvas.width / 2;
-            const startY = groundRect.top; // Nasce exatamente da linha preta
-            const initialLength = canvas.height * 0.14; 
-            
-            drawTree(startX, startY, initialLength, 0, 14, 0);
+    var growAnimate = eval(Jscex.compile("async", function () {
+        do {
+            tree.grow();
+            $await(Jscex.Async.sleep(10));
+        } while (tree.canGrow());
+    }));
 
-        }, 500);
-    };
+    var flowAnimate = eval(Jscex.compile("async", function () {
+        do {
+            tree.flower(2);
+            $await(Jscex.Async.sleep(10));
+        } while (tree.canFlower());
+    }));
 
-</script>
-</body>
-</html>
+    var moveAnimate = eval(Jscex.compile("async", function () {
+        tree.snapshot("p1", 240, 0, 610, 680);
+        while (tree.move("p1", 500, 0)) {
+            foot.draw();
+            $await(Jscex.Async.sleep(10));
+        }
+        foot.draw();
+        tree.snapshot("p2", 500, 0, 610, 680);
+
+        canvas.parent().css("background", "url(" + tree.toDataURL('image/png') + ")");
+        canvas.css("background", "#F5E8DC");
+        $await(Jscex.Async.sleep(300));
+        canvas.css("background", "none");
+    }));
+
+    var jumpAnimate = eval(Jscex.compile("async", function () {
+        var ctx = tree.ctx;
+        while (true) {
+            tree.ctx.clearRect(0, 0, width, height);
+            tree.jump();
+            foot.draw();
+            $await(Jscex.Async.sleep(25));
+        }
+    }));
+
+    var textAnimate = eval(Jscex.compile("async", function () {
+        var together = new Date();
+        // DATA ALTERADA: 31 de Agosto de 2025
+        // (Ano, Mês [0-11], Dia) -> Agosto é 7
+        together.setFullYear(2025, 7, 31);
+        together.setHours(0);
+        together.setMinutes(0);
+        together.setSeconds(0);
+        together.setMilliseconds(0);
+
+        $("#code").show().typewriter();
+        $("#clock-box").fadeIn(500);
+        while (true) {
+            timeElapse(together);
+            $await(Jscex.Async.sleep(1000));
+        }
+    }));
+
+    var runAsync = eval(Jscex.compile("async", function () {
+        $await(seedAnimate());
+        $await(growAnimate());
+        $await(flowAnimate());
+        $await(moveAnimate());
+
+        textAnimate().start();
+
+        $await(jumpAnimate());
+    }));
+
+    runAsync().start();
+})();
