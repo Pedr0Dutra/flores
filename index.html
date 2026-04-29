@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flores para você 🌻</title>
+    <title>Flores para ti 🌻</title>
     <style>
         body {
             margin: 0;
@@ -32,50 +32,41 @@
         }
         .text-container {
             position: absolute;
-            top: 15%;
+            top: 10%;
             left: 5%;
             z-index: 2;
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
             font-size: 1.1rem;
-            line-height: 1.6;
+            line-height: 1.4;
         }
         @media (min-width: 768px) {
-            .text-container { font-size: 1.4rem; top: 20%; left: 10%; }
-            .timer-container { font-size: 1.2rem; }
+            .text-container { font-size: 1.3rem; top: 15%; left: 8%; }
         }
         .timer-container {
             position: absolute;
-            bottom: 10%;
+            bottom: 8%;
             left: 5%;
             z-index: 2;
             font-size: 0.9rem;
-            background: rgba(250, 243, 224, 0.7);
-            padding: 10px;
-            border-radius: 8px;
+            background: rgba(250, 243, 224, 0.8);
+            padding: 12px;
+            border-radius: 10px;
+            border-bottom: 3px solid #4A3B32;
         }
         .typewriter {
             min-height: 24px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .cursor {
             display: inline-block;
-            width: 8px;
+            width: 10px;
             height: 1.2em;
             background-color: #4A3B32;
             animation: blink 1s step-end infinite;
             vertical-align: bottom;
         }
         @keyframes blink { 50% { opacity: 0; } }
-        .ground {
-            position: absolute;
-            bottom: 15%;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: #4A3B32;
-            z-index: 0;
-        }
     </style>
 </head>
 <body>
@@ -89,11 +80,10 @@
     </div>
 
     <canvas id="canvas"></canvas>
-    <div class="ground"></div>
 </div>
 
 <script>
-    // --- TEXTOS E DATA ---
+    // --- CONFIGURAÇÕES ---
     const phrases = [
         "Flores Amarelas para o amor da minha vida:",
         "Se eu pudesse escolher um lugar seguro, seria ao seu lado.",
@@ -101,7 +91,7 @@
         "- Eu te amo! 🌻"
     ];
     
-    // Data alterada para 31 de Agosto de 2025 
+    // Data: 31 de Agosto de 2025 (Agosto é mês 7 no JS)
     const startDate = new Date(2025, 7, 31, 0, 0, 0); 
 
     // --- MÁQUINA DE ESCREVER ---
@@ -126,32 +116,26 @@
                 currentElement.innerHTML = phrases[phraseIndex];
                 phraseIndex++;
                 charIndex = 0;
-                setTimeout(typeWriter, 1200); 
+                setTimeout(typeWriter, 1000); 
             }
-        } else {
-            const p = document.getElementById(`phrase-${phraseIndex - 1}`);
-            p.innerHTML += '<span class="cursor"></span>';
         }
     }
-    setTimeout(typeWriter, 800);
+    setTimeout(typeWriter, 1000);
 
-    // --- CONTADOR DE TEMPO ---
+    // --- CRONÓMETRO ---
     function updateTimer() {
         const now = new Date();
         const diff = now - startDate;
-
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const minutes = Math.floor((diff / 1000 / 60) % 60);
         const seconds = Math.floor((diff / 1000) % 60);
-
-        document.getElementById('timer').innerText = 
-            `${days} dias ${hours} horas ${minutes} minutos ${seconds} segundos`;
+        document.getElementById('timer').innerText = `${days} dias ${hours} horas ${minutes} minutos ${seconds} segundos`;
     }
     setInterval(updateTimer, 1000);
     updateTimer();
 
-    // --- ANIMAÇÃO DA ÁRVORE (CORRIGIDA COM TRIGONOMETRIA) ---
+    // --- ANIMAÇÃO DA ÁRVORE DE CORAÇÃO ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -165,70 +149,110 @@
     window.addEventListener('resize', resize);
     resize();
 
-    function drawFlower(x, y) {
-        // Miolo da flor
+    function drawSunflower(x, y, size) {
+        // Miolo
         ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFD700'; 
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = '#63391d';
         ctx.fill();
         
-        ctx.beginPath();
-        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#8B4513'; 
-        ctx.fill();
-
         // Pétalas
-        for (let i = 0; i < 6; i++) {
+        const petalCount = 10;
+        for (let i = 0; i < petalCount; i++) {
             ctx.save();
             ctx.translate(x, y);
-            ctx.rotate(i * Math.PI / 3);
+            ctx.rotate((i * Math.PI * 2) / petalCount);
             ctx.beginPath();
-            ctx.ellipse(7, 0, 4, 2, 0, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFE600';
+            ctx.ellipse(size * 1.5, 0, size * 1.2, size * 0.5, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
             ctx.fill();
             ctx.restore();
         }
     }
 
-    function drawTree(startX, startY, len, angle, branchWidth, currentDepth, maxDepth) {
-        // Cálculo do ponto final usando Seno e Cosseno (Garante a posição certa)
-        const endX = startX + len * Math.sin(angle * Math.PI / 180);
-        const endY = startY - len * Math.cos(angle * Math.PI / 180);
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#4A3B32';
-        ctx.lineCap = 'round';
-        ctx.lineWidth = branchWidth;
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
-
-        if (currentDepth < maxDepth) {
-            setTimeout(() => {
-                const angleOffset = 15 + Math.random() * 20;
-                const lengthFactor = 0.7 + Math.random() * 0.15;
-                
-                // Desenha os próximos galhos a partir do ponto final (endX, endY)
-                drawTree(endX, endY, len * lengthFactor, angle + angleOffset, branchWidth * 0.7, currentDepth + 1, maxDepth);
-                drawTree(endX, endY, len * lengthFactor, angle - angleOffset, branchWidth * 0.7, currentDepth + 1, maxDepth);
-                
-                if (currentDepth > 2 && Math.random() > 0.5) {
-                     drawTree(endX, endY, len * 0.5, angle + (Math.random() * 20 - 10), branchWidth * 0.6, currentDepth + 1, maxDepth);
-                }
-            }, 100); 
-        } else {
-            // Desenha a flor no final do último galho
-            setTimeout(() => { drawFlower(endX, endY); }, 200); 
-        }
+    // Equação do Coração para os Girassóis
+    function getHeartPoint(t, scale) {
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        return { x: x * scale, y: y * scale };
     }
 
-    setTimeout(() => {
-        let treeX = width > 768 ? width * 0.7 : width * 0.75; 
-        let treeY = height * 0.85; 
-        // Inicia a árvore (Posição X, Posição Y, Tamanho Inicial, Ângulo Inicial, Espessura, Profundidade Atual, Profundidade Máxima)
-        drawTree(treeX, treeY, height * 0.13, 0, 12, 0, 7);
-    }, 500);
+    function animateTree() {
+        const centerX = width * 0.65;
+        const bottomY = height * 0.8;
+        const trunkHeight = height * 0.25;
+        const heartScale = width > 768 ? 10 : 7;
+        
+        // 1. Desenhar o tronco principal
+        let currentHeight = 0;
+        const drawTrunk = () => {
+            if (currentHeight < trunkHeight) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#4A3B32';
+                ctx.lineWidth = 12;
+                ctx.lineCap = 'round';
+                ctx.moveTo(centerX, bottomY);
+                ctx.lineTo(centerX, bottomY - currentHeight);
+                ctx.stroke();
+                currentHeight += 4;
+                requestAnimationFrame(drawTrunk);
+            } else {
+                drawBranches();
+            }
+        };
 
+        // 2. Desenhar os ramos que sobem para o coração
+        const drawBranches = () => {
+            let step = 0;
+            const drawStep = () => {
+                if (step < 20) {
+                    ctx.beginPath();
+                    ctx.lineWidth = 8 - (step * 0.3);
+                    ctx.moveTo(centerX, bottomY - trunkHeight);
+                    // Criar ramificações leves para a base do coração
+                    ctx.lineTo(centerX + (step * 2), bottomY - trunkHeight - (step * 3));
+                    ctx.lineTo(centerX - (step * 2), bottomY - trunkHeight - (step * 3));
+                    ctx.stroke();
+                    step++;
+                    setTimeout(drawStep, 30);
+                } else {
+                    popFlowers();
+                }
+            };
+            drawStep();
+        };
+
+        // 3. Fazer os Girassóis aparecerem em formato de coração
+        const popFlowers = () => {
+            let t = 0;
+            const flowerInterval = setInterval(() => {
+                if (t <= Math.PI * 2) {
+                    const point = getHeartPoint(t, heartScale);
+                    // Ajustar posição para o topo do tronco
+                    const x = centerX + point.x;
+                    const y = (bottomY - trunkHeight - 40) + point.y;
+                    
+                    drawSunflower(x, y, 4 + Math.random() * 3);
+                    t += 0.15; // Velocidade de preenchimento
+                } else {
+                    clearInterval(flowerInterval);
+                    // Preenchimento extra no meio do coração
+                    for(let i=0; i<30; i++) {
+                        setTimeout(() => {
+                            const r = Math.random() * heartScale;
+                            const angle = Math.random() * Math.PI * 2;
+                            const p = getHeartPoint(angle, r);
+                            drawSunflower(centerX + p.x, (bottomY - trunkHeight - 40) + p.y, 3);
+                        }, i * 50);
+                    }
+                }
+            }, 50);
+        };
+
+        drawTrunk();
+    }
+
+    setTimeout(animateTree, 1500);
 </script>
 </body>
 </html>
