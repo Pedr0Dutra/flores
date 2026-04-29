@@ -1,106 +1,111 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flores para ti 🌻</title>
+    <title>Flores para você 🌻</title>
     <style>
-        :root {
-            --bg-color: #F9F6ED; /* Cor creme/sepia suave idêntica ao vídeo */
-            --text-color: #4A3B32;
-        }
         body {
             margin: 0;
             padding: 0;
-            background-color: var(--bg-color);
+            background-color: #FAF3E0; /* Fundo creme do vídeo */
             font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
             height: 100vh;
-            color: var(--text-color);
+            color: #4A3B32;
         }
-        #container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-        #canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        /* --- TEXTO INTEGRADO (Exatamente como no vídeo) --- */
+
+        /* Texto no topo esquerdo (como no vídeo) */
         .text-container {
             position: absolute;
-            top: 10%;
+            top: 8%;
             left: 5%;
-            z-index: 2;
+            z-index: 10;
             width: 90%;
             max-width: 450px;
             font-size: 1.1rem;
-            line-height: 1.4;
-            /* Sombras leves para garantir leitura sobre as flores futuramente */
-            text-shadow: 2px 2px 4px rgba(249, 246, 237, 0.9);
+            line-height: 1.6;
         }
         @media (min-width: 768px) {
-            .text-container { font-size: 1.3rem; top: 15%; left: 8%; }
+            .text-container { font-size: 1.4rem; top: 12%; left: 8%; }
         }
+
         .typewriter {
             min-height: 24px;
             margin-bottom: 12px;
         }
         .cursor {
             display: inline-block;
-            width: 10px;
+            width: 8px;
             height: 1.2em;
-            background-color: var(--text-color);
+            background-color: #4A3B32;
             animation: blink 1s step-end infinite;
             vertical-align: bottom;
         }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* --- CRONÓMETRO (Idêntico ao vídeo) --- */
-        .timer-container {
+        /* Canvas da árvore centralizado */
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* Linha do chão e Cronômetro (Exatamente como no vídeo) */
+        .bottom-section {
             position: absolute;
             bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ground-line {
             width: 90%;
-            max-width: 400px;
-            font-size: 0.9rem;
-            background: rgba(249, 246, 237, 0.9);
-            padding: 12px;
-            border-radius: 10px;
+            height: 3px;
+            background-color: #4A3B32;
+            margin-bottom: 15px;
+        }
+
+        .timer-container {
             text-align: center;
-            box-sizing: border-box;
-            border: 2px solid var(--text-color);
-            box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+            font-size: 0.95rem;
+            background: rgba(250, 243, 224, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .timer-container strong {
+            display: block;
+            margin-bottom: 5px;
         }
         #timer {
-            margin: 5px 0 0 0;
-            font-weight: bold;
-            font-size: 0.95rem;
+            margin: 0;
         }
     </style>
 </head>
 <body>
 
-<div id="container">
     <div class="text-container" id="text-container"></div>
     
     <canvas id="canvas"></canvas>
 
-    <div class="timer-container">
-        <strong>Meu amor por você começou há...</strong>
-        <p id="timer">0 dias 0 horas 0 minutos 0 segundos</p>
+    <div class="bottom-section">
+        <div class="ground-line" id="ground"></div>
+        <div class="timer-container">
+            <strong>Meu amor por você começou há...</strong>
+            <p id="timer">0 dias 0 horas 0 minutos 0 segundos</p>
+        </div>
     </div>
-</div>
 
 <script>
-    // --- TEXTOS E DATA ---
+    // --- 1. TEXTOS E DATA ---
     const phrases = [
         "Flores Amarelas para o amor da minha vida:",
         "Se eu pudesse escolher um lugar seguro, seria ao seu lado.",
@@ -108,10 +113,10 @@
         "- Eu te amo! 🌻"
     ];
     
-    // Data alterada para 31 de Agosto de 2025 
+    // Data: 31 de Agosto de 2025
     const startDate = new Date(2025, 7, 31, 0, 0, 0); 
 
-    // --- MÁQUINA DE ESCREVER ---
+    // --- 2. MÁQUINA DE ESCREVER ---
     const textContainer = document.getElementById('text-container');
     let phraseIndex = 0;
     let charIndex = 0;
@@ -133,16 +138,16 @@
                 currentElement.innerHTML = phrases[phraseIndex];
                 phraseIndex++;
                 charIndex = 0;
-                setTimeout(typeWriter, 1000); 
+                setTimeout(typeWriter, 1200); 
             }
         } else {
             const p = document.getElementById(`phrase-${phraseIndex - 1}`);
             if(p) p.innerHTML += '<span class="cursor"></span>';
         }
     }
-    setTimeout(typeWriter, 1000);
+    setTimeout(typeWriter, 800);
 
-    // --- CRONÓMETRO ---
+    // --- 3. CONTADOR DE TEMPO ---
     function updateTimer() {
         const now = new Date();
         const diff = now - startDate;
@@ -155,117 +160,84 @@
     setInterval(updateTimer, 1000);
     updateTimer();
 
-    // --- ANIMAÇÃO DA ÁRVORE DE CORAÇÃO ---
+    // --- 4. ÁRVORE FRACTAL (CÓPIA EXATA DO VÍDEO) ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let width, height;
-
-    function resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', resize);
-    resize();
+    resizeCanvas();
 
-    // Flores Simples (Igual ao vídeo)
-    function drawFlower(x, y, size) {
-        // Miolo
+    // Desenha as flores apenas nas pontas
+    function drawFlower(x, y) {
+        // Pétalas amarelas
         ctx.beginPath();
-        ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
-        ctx.fillStyle = '#63391d'; // Castanho
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFD700'; 
         ctx.fill();
-        
-        // Pétalas simples
-        ctx.fillStyle = '#FFD700'; // Amarelo vibrante
-        for (let i = 0; i < 6; i++) {
-            const angle = (i * Math.PI * 2) / 6;
+
+        for (let i = 0; i < 5; i++) {
+            const angle = (i * Math.PI * 2) / 5;
             ctx.beginPath();
-            ctx.ellipse(
-                x + Math.cos(angle) * size * 1.3, 
-                y + Math.sin(angle) * size * 1.3, 
-                size * 1.1, size * 0.6, angle, 0, Math.PI * 2
-            );
+            ctx.arc(x + Math.cos(angle) * 5, y + Math.sin(angle) * 5, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFE600';
             ctx.fill();
         }
+
+        // Miolo marrom
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#8B4513'; 
+        ctx.fill();
     }
 
-    // Equação Paramétrica do Coração Perfeito
-    function getHeartPoint(t, scale, centerX, centerY) {
-        const hX = 16 * Math.pow(Math.sin(t), 3);
-        const hY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-        return { x: hX * scale + centerX, y: hY * scale + centerY };
-    }
+    // Lógica Matemática da Árvore Clássica
+    function drawTree(startX, startY, len, angle, branchWidth, depth) {
+        // Calcula o destino do galho
+        const endX = startX + len * Math.sin(angle * Math.PI / 180);
+        const endY = startY - len * Math.cos(angle * Math.PI / 180);
 
-    function animateTree() {
-        const centerX = width * 0.65;
-        const bottomY = height * 0.8;
-        const trunkHeight = height * 0.25;
-        // Escala do coração baseada na largura da tela
-        const heartScale = width > 768 ? 10 : 7.5; 
-        
-        // 1. Desenhar o tronco principal
-        let currentHeight = 0;
-        const drawTrunk = () => {
-            if (currentHeight < trunkHeight) {
-                ctx.beginPath();
-                ctx.strokeStyle = '#4A3B32'; // Castanho escuro
-                ctx.lineWidth = 12;
-                ctx.lineCap = 'round';
-                ctx.moveTo(centerX, bottomY);
-                ctx.lineTo(centerX, bottomY - currentHeight);
-                ctx.stroke();
-                currentHeight += 4;
-                requestAnimationFrame(drawTrunk);
-            } else {
-                drawHeartBranches();
-            }
-        };
+        ctx.beginPath();
+        ctx.strokeStyle = '#4A3B32';
+        ctx.lineWidth = branchWidth;
+        ctx.lineCap = 'round';
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
 
-        // 2. Desenhar os ramos que formam o contorno do coração
-        const drawHeartBranches = () => {
-            let t = 0;
-            const step = 0.1;
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = '#4A3B32';
-
-            const drawContour = setInterval(() => {
-                if (t <= Math.PI * 2) {
-                    const startPoint = getHeartPoint(t, heartScale, centerX, bottomY - trunkHeight);
-                    t += step;
-                    const endPoint = getHeartPoint(t, heartScale, centerX, bottomY - trunkHeight);
-
-                    // Desenha o segmento do ramo
-                    ctx.beginPath();
-                    ctx.moveTo(startPoint.x, startPoint.y);
-                    ctx.lineTo(endPoint.x, endPoint.y);
-                    ctx.stroke();
-                } else {
-                    clearInterval(drawContour);
-                    popFlowersExplosion(); // Quando os ramos estão prontos, as flores explodem
-                }
-            }, 30);
-        };
-
-        // 3. Explosão de Flores Simples cobrindo o coração
-        const popFlowersExplosion = () => {
-            for (let i = 0; i < 250; i++) {
-                setTimeout(() => {
-                    const t = Math.random() * Math.PI * 2;
-                    // Raiz quadrada do Math.random garante preenchimento denso no centro
-                    const scaleFactor = Math.sqrt(Math.random()) * heartScale; 
-                    const pt = getHeartPoint(t, scaleFactor, centerX, bottomY - trunkHeight);
-                    
-                    drawFlower(pt.x, pt.y, 3 + Math.random() * 3);
-                }, i * 15); // Tempo para cada flor aparecer sequencialmente
-            }
+        // A árvore do vídeo se divide exatamente 7 vezes
+        if (depth < 7) {
+            setTimeout(() => {
+                // Galho da esquerda e galho da direita (simetria perfeita)
+                drawTree(endX, endY, len * 0.75, angle - 25, branchWidth * 0.7, depth + 1);
+                drawTree(endX, endY, len * 0.75, angle + 25, branchWidth * 0.7, depth + 1);
+            }, 80); // Velocidade de crescimento
+        } else {
+            // Quando a árvore termina de crescer, a flor nasce
+            setTimeout(() => {
+                drawFlower(endX, endY);
+            }, 100);
         }
-
-        drawTrunk();
     }
 
-    setTimeout(animateTree, 1500);
+    // Inicia a animação
+    window.onload = () => {
+        setTimeout(() => {
+            // Posiciona a árvore exatamente no meio, nascendo da linha
+            const groundElement = document.getElementById('ground');
+            const groundRect = groundElement.getBoundingClientRect();
+            
+            const startX = canvas.width / 2;
+            const startY = groundRect.top; // Nasce exatamente da linha preta
+            const initialLength = canvas.height * 0.14; 
+            
+            drawTree(startX, startY, initialLength, 0, 14, 0);
+
+        }, 500);
+    };
+
 </script>
 </body>
 </html>
