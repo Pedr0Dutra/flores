@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flores para você 🌻</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FAF3E0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #4A3B32;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .text-container {
+            position: absolute;
+            top: 15%;
+            left: 5%;
+            z-index: 2;
+            width: 90%;
+            max-width: 400px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        @media (min-width: 768px) {
+            .text-container { font-size: 1.4rem; top: 20%; left: 10%; }
+            .timer-container { font-size: 1.2rem; }
+        }
+        .timer-container {
+            position: absolute;
+            bottom: 10%;
+            left: 5%;
+            z-index: 2;
+            font-size: 0.9rem;
+            background: rgba(250, 243, 224, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .typewriter {
+            min-height: 24px;
+            margin-bottom: 15px;
+        }
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: #4A3B32;
+            animation: blink 1s step-end infinite;
+            vertical-align: bottom;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        .ground {
+            position: absolute;
+            bottom: 15%;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #4A3B32;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <div class="text-container" id="text-container"></div>
+    
+    <div class="timer-container">
+        <strong>Meu amor por você começou há...</strong>
+        <p id="timer">0 dias 0 horas 0 minutos 0 segundos</p>
+    </div>
+
+    <canvas id="canvas"></canvas>
+    <div class="ground"></div>
+</div>
+
+<script>
+    // --- TEXTOS E DATA ---
+    const phrases = [
+        "Flores Amarelas para o amor da minha vida:",
+        "Se eu pudesse escolher um lugar seguro, seria ao seu lado.",
+        "Quanto mais tempo passa, vejo que meu amor por você só cresce.",
+        "- Eu te amo! 🌻"
+    ];
+    
+    // Data alterada para 31 de Agosto de 2025 
+    // (Janeiro = 0, Fevereiro = 1... Agosto = 7)
+    const startDate = new Date(2025, 7, 31, 0, 0, 0); 
+
+    // --- MÁQUINA DE ESCREVER ---
+    const textContainer = document.getElementById('text-container');
+    let phraseIndex = 0;
+    let charIndex = 0;
+    
+    function typeWriter() {
+        if (phraseIndex < phrases.length) {
+            if (charIndex === 0) {
+                const p = document.createElement('div');
+                p.className = 'typewriter';
+                p.id = `phrase-${phraseIndex}`;
+                textContainer.appendChild(p);
+            }
+            const currentElement = document.getElementById(`phrase-${phraseIndex}`);
+            if (charIndex < phrases[phraseIndex].length) {
+                currentElement.innerHTML = phrases[phraseIndex].substring(0, charIndex + 1) + '<span class="cursor"></span>';
+                charIndex++;
+                setTimeout(typeWriter, 50); 
+            } else {
+                currentElement.innerHTML = phrases[phraseIndex];
+                phraseIndex++;
+                charIndex = 0;
+                setTimeout(typeWriter, 1200); 
+            }
+        } else {
+            const p = document.getElementById(`phrase-${phraseIndex - 1}`);
+            p.innerHTML += '<span class="cursor"></span>';
+        }
+    }
+    setTimeout(typeWriter, 800);
+
+    // --- CONTADOR DE TEMPO ---
+    function updateTimer() {
+        const now = new Date();
+        const diff = now - startDate;
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        document.getElementById('timer').innerText = 
+            `${days} dias ${hours} horas ${minutes} minutos ${seconds} segundos`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // --- ANIMAÇÃO DA ÁRVORE (CANVAS) ---
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function drawFlower(x, y) {
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFD700'; 
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#8B4513'; 
+        ctx.fill();
+
+        for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.ellipse(x + Math.cos(i * Math.PI / 3) * 7, y + Math.sin(i * Math.PI / 3) * 7, 4, 2, i * Math.PI / 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFE600';
+            ctx.fill();
+        }
+    }
+
+    function drawTree(startX, startY, len, angle, branchWidth, currentDepth, maxDepth) {
+        ctx.beginPath();
+        ctx.save();
+        ctx.strokeStyle = '#4A3B32';
+        ctx.fillStyle = '#4A3B32';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = branchWidth;
+        ctx.translate(startX, startY);
+        ctx.rotate(angle * Math.PI / 180);
+        
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -len);
+        ctx.stroke();
+
+        if (currentDepth < maxDepth) {
+            setTimeout(() => {
+                const angleOffset = 15 + Math.random() * 20;
+                const lengthFactor = 0.7 + Math.random() * 0.15;
+                
+                drawTree(0, -len, len * lengthFactor, angle + angleOffset, branchWidth * 0.7, currentDepth + 1, maxDepth);
+                drawTree(0, -len, len * lengthFactor, angle - angleOffset, branchWidth * 0.7, currentDepth + 1, maxDepth);
+                
+                if (currentDepth > 2 && Math.random() > 0.5) {
+                     drawTree(0, -len, len * 0.5, angle + (Math.random() * 20 - 10), branchWidth * 0.6, currentDepth + 1, maxDepth);
+                }
+            }, 100); 
+        } else {
+            setTimeout(() => { drawFlower(0, -len); }, 200); 
+        }
+        ctx.restore();
+    }
+
+    setTimeout(() => {
+        let treeX = width > 768 ? width * 0.7 : width * 0.75; 
+        let treeY = height * 0.85; 
+        drawTree(treeX, treeY, height * 0.13, 0, 12, 0, 7);
+    }, 500);
+
+</script>
+</body>
+</html>
